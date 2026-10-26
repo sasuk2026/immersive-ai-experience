@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>沉浸式互动体验</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg-dark: #0a0a0f;
+  --bg-card: #151520;
+  --accent: #ff2d55;
+  --accent2: #bf5af2;
+  --text: #f5f5f7;
+  --text-muted: #86868b;
+  --border: #2c2c3e;
+  --success: #30d158;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.header {
+  text-align: center;
+  padding: 40px 0 30px;
+}
+.header h1 {
+  font-size: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.header p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.section {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+.section-title {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.option-btn {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 12px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.option-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.option-btn.selected {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-color: transparent;
+  color: white;
+}
+.slider-group {
+  margin-bottom: 16px;
+}
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.slider-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  -webkit-appearance: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  cursor: pointer;
+}
+.stage-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.stage-tab {
+  padding: 10px 16px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.stage-tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-color: transparent;
+}
+.ai-chat-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  max-height: 70vh;
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+.ai-chat-panel.collapsed {
+  transform: translateY(calc(100% - 60px));
+}
+.ai-chat-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  min-height: 60px;
+}
+.ai-chat-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ai-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.ai-status {
+  font-size: 12px;
+  color: var(--success);
+}
+.ai-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  max-height: 40vh;
+}
+.message {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 10px;
+}
+.message.user {
+  flex-direction: row-reverse;
+}
+.message-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.message.ai .message-bubble {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+}
+.message.user .message-bubble {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-top-right-radius: 4px;
+}
+.ai-input-area {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+}
+.ai-input {
+  flex: 1;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  min-height: 44px;
+}
+.ai-input:focus {
+  border-color: var(--accent);
+}
+.send-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.config-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.config-panel.show {
+  display: flex;
+}
+.config-box {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid var(--border);
+}
+.config-box h3 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+.config-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 12px;
+  min-height: 44px;
+}
+.config-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.config-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.float-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,45,85,0.4);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scene-visual {
+  height: 200px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.scene-visual::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(255,45,85,0.1) 0%, transparent 70%);
+  animation: pulse 4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+.scene-icon {
+  font-size: 80px;
+  z-index: 1;
+}
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.setting-row:last-child {
+  border-bottom: none;
+}
+.toggle {
+  width: 50px;
+  height: 28px;
+  background: var(--border);
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.toggle.active {
+  background: var(--accent);
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+.toggle.active::after {
+  transform: translateX(22px);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>✨ 沉浸式互动体验</h1>
+    <p>自定义你的专属体验</p>
+  </div>
+
+  <div class="scene-visual">
+    <div class="scene-icon">🌙</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">选择角色</div>
+    <div class="grid-2">
+      <button class="option-btn selected" onclick="selectOption(this, 'character')">温柔女友</button>
+      <button class="option-btn" onclick="selectOption(this, 'character')">火辣御姐</button>
+      <button class="option-btn" onclick="selectOption(this, 'character')">清纯学妹</button>
+      <button class="option-btn" onclick="selectOption(this, 'character')">神秘陌生人</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">角色年龄</div>
+    <div class="grid-3">
+      <button class="option-btn selected" onclick="selectOption(this, 'age')">20-25</button>
+      <button class="option-btn" onclick="selectOption(this, 'age')">26-30</button>
+      <button class="option-btn" onclick="selectOption(this, 'age')">31-40</button>
+      <button class="option-btn" onclick="selectOption(this, 'age')">40+</button>
+      <button class="option-btn" onclick="selectOption(this, 'age')">全部</button>
+      <button class="option-btn" onclick="selectOption(this, 'age')">自定义</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">身体特征</div>
+    <div class="slider-group">
+      <div class="slider-label">
+        <span>敏感度</span>
+        <span class="slider-value" id="sensitivity-val">70%</span>
+      </div>
+      <input type="range" min="0" max="100" value="70" oninput="updateSlider('sensitivity', this.value)">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        <span>紧致度</span>
+        <span class="slider-value" id="tightness-val">65%</span>
+      </div>
+      <input type="range" min="0" max="100" value="65" oninput="updateSlider('tightness', this.value)">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        <span>湿润度</span>
+        <span class="slider-value" id="moisture-val">60%</span>
+      </div>
+      <input type="range" min="0" max="100" value="60" oninput="updateSlider('moisture', this.value)">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">互动阶段</div>
+    <div class="stage-tabs">
+      <button class="stage-tab active" onclick="selectStage(this, 'foreplay')">前戏调情</button>
+      <button class="stage-tab" onclick="selectStage(this, 'intimacy')">亲密接触</button>
+      <button class="stage-tab" onclick="selectStage(this, 'passion')">激情时刻</button>
+      <button class="stage-tab" onclick="selectStage(this, 'aftercare')">事后温存</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">设置</div>
+    <div class="setting-row">
+      <span>AI对话助手</span>
+      <div class="toggle active" id="ai-toggle" onclick="toggleAI()"></div>
+    </div>
+    <div class="setting-row">
+      <span>沉浸式音效</span>
+      <div class="toggle" id="sound-toggle" onclick="toggleSound()"></div>
+    </div>
+    <div class="setting-row">
+      <span>震动反馈</span>
+      <div class="toggle active" id="haptic-toggle" onclick="toggleHaptic()"></div>
+    </div>
+  </div>
+</div>
+
+<button class="float-btn" onclick="toggleChatPanel()">💬</button>
+
+<div class="ai-chat-panel collapsed" id="chat-panel">
+  <div class="ai-chat-header" onclick="toggleChatPanel()">
+    <div class="ai-chat-title">
+      <div class="ai-avatar">🤖</div>
+      <div>
+        <div>AI 伴侣</div>
+        <div class="ai-status">● 在线</div>
+      </div>
+    </div>
+    <span>▼</span>
+  </div>
+  <div class="ai-messages" id="messages">
+    <div class="message ai">
+      <div class="message-bubble">嗨~ 你好呀 😊 今天想和我怎么互动呢？</div>
+    </div>
+  </div>
+  <div class="ai-input-area">
+    <input type="text" class="ai-input" id="user-input" placeholder="输入消息..." onkeypress="handleKeyPress(event)">
+    <button class="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<div class="config-panel" id="config-panel">
+  <div class="config-box">
+    <h3>⚙️ API 配置</h3>
+    <input type="text" class="config-input" id="api-url" placeholder="API 接口地址">
+    <input type="password" class="config-input" id="api-key" placeholder="API Key">
+    <button class="config-btn" onclick="saveConfig()">保存配置</button>
+    <button class="config-btn" style="background: var(--border); margin-top: 10px;" onclick="closeConfig()">取消</button>
+  </div>
+</div>
+
+<button class="float-btn" style="bottom: 90px; right: 20px; background: var(--border);" onclick="openConfig()">⚙️</button>
+
+<script>
+let config = {
+  apiUrl: '',
+  apiKey: '',
+  character: '温柔女友',
+  age: '20-25',
+  sensitivity: 70,
+  tightness: 65,
+  moisture: 60,
+  stage: 'foreplay'
+};
+
+function selectOption(btn, type) {
+  const siblings = btn.parentElement.querySelectorAll('.option-btn');
+  siblings.forEach(s => s.classList.remove('selected'));
+  btn.classList.add('selected');
+  config[type] = btn.textContent.trim();
+}
+
+function updateSlider(name, value) {
+  document.getElementById(name + '-val').textContent = value + '%';
+  config[name] = parseInt(value);
+}
+
+function selectStage(btn, stage) {
+  document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  config.stage = stage;
+  
+  const icons = {
+    foreplay: '💋',
+    intimacy: '🔥',
+    passion: '❤️‍🔥',
+    aftercare: '💕'
+  };
+  document.querySelector('.scene-icon').textContent = icons[stage] || '🌙';
+  
+  const stageNames = {
+    foreplay: '前戏调情阶段',
+    intimacy: '亲密接触阶段',
+    passion: '激情时刻',
+    aftercare: '事后温存'
+  };
+  
+  addMessage('system', '已进入' + stageNames[stage]);
+}
+
+function toggleChatPanel() {
+  const panel = document.getElementById('chat-panel');
+  panel.classList.toggle('collapsed');
+}
+
+function toggleAI() {
+  const toggle = document.getElementById('ai-toggle');
+  toggle.classList.toggle('active');
+}
+
+function toggleSound() {
+  const toggle = document.getElementById('sound-toggle');
+  toggle.classList.toggle('active');
+}
+
+function toggleHaptic() {
+  const toggle = document.getElementById('haptic-toggle');
+  toggle.classList.toggle('active');
+}
+
+function addMessage(type, text) {
+  const container = document.getElementById('messages');
+  const msg = document.createElement('div');
+  msg.className = 'message ' + type;
+  
+  const bubble = document.createElement('div');
+  bubble.className = 'message-bubble';
+  bubble.textContent = text;
+  
+  msg.appendChild(bubble);
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  addMessage('user', text);
+  input.value = '';
+  
+  if (!config.apiUrl || !config.apiKey) {
+    setTimeout(() => addMessage('ai', '请先点击右上角 ⚙️ 配置 API 接口和 Key'), 500);
+    return;
+  }
+  
+  try {
+    const response = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + config.apiKey
+      },
+      body: JSON.stringify({
+        message: text,
+        character: config.character,
+        stage: config.stage,
+        settings: config
+      })
+    });
+    
+    const data = await response.json();
+    setTimeout(() => addMessage('ai', data.response || '我收到了你的消息~'), 500);
+  } catch (e) {
+    setTimeout(() => addMessage('ai', '连接失败，请检查 API 配置'), 500);
+  }
+}
+
+function handleKeyPress(e) {
+  if (e.key === 'Enter') sendMessage();
+}
+
+function openConfig() {
+  document.getElementById('config-panel').classList.add('show');
+}
+
+function closeConfig() {
+  document.getElementById('config-panel').classList.remove('show');
+}
+
+function saveConfig() {
+  config.apiUrl = document.getElementById('api-url').value.trim();
+  config.apiKey = document.getElementById('api-key').value.trim();
+  closeConfig();
+  addMessage('system', 'API 配置已保存');
+}
+</script>
+</body>
+</html>
